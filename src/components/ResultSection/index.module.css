@@ -1,0 +1,11 @@
+.result {
+  padding: 0 30px;
+
+  h1 {
+    font-size: 3rem;
+
+    span {
+      color: var(--color-purple);
+    }
+  }
+}
