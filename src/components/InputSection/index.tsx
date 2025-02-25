@@ -1,9 +1,10 @@
 import React from 'react';
 import { DateTime, Interval } from 'luxon';
+import type { FormProps } from 'antd';
 import {
+  Form,
   InputNumber,
   Button,
-  Typography,
   Flex,
   ConfigProvider,
 } from 'antd';
@@ -17,57 +18,42 @@ type InputSectionProps = {
   setDays: React.Dispatch<React.SetStateAction<number | null>>;
 };
 
-const InputSection = ({
-  setYears,
-  setMonths,
-  setDays,
-}: InputSectionProps) => {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.currentTarget);
-    const day = Number(formData.get('day'));
-    const month = Number(formData.get('month'));
-    const year = Number(formData.get('year'));
-
-    calcAge(year, month, day);
+const InputSection = (props: InputSectionProps) => {
+  type FieldType = {
+    day: number;
+    month: number;
+    year: number;
   };
 
-  const calcAge = (year: number, month: number, day: number) => {
+  const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
+    calcAge(values);
+  };
+
+  const calcAge = ({ year, month, day }: FieldType) => {
     const start = DateTime.fromObject({ year, month, day });
     const end = DateTime.now();
 
-    if (start.toMillis() < end.toMillis()) {
-      const interval = end.diff(start, ['years', 'months', 'days']);
-      const i = Interval.fromDateTimes(start, end);
-      console.log(
-        i.toDuration(['years', 'months', 'days']).toObject()
-      );
+    const interval = end.diff(start, ['years', 'months', 'days']);
+    const i = Interval.fromDateTimes(start, end);
+    console.log(i.toDuration(['years', 'months', 'days']).toObject());
 
-      setYears(Math.abs(interval.years));
-      setMonths(Math.abs(interval.months));
-      setDays(Math.abs(Math.floor(interval.days)));
-    } else {
-      const interval = start.diff(end, ['years', 'months', 'days']);
-      const i = Interval.fromDateTimes(end, start);
-      console.log(
-        i.toDuration(['years', 'months', 'days']).toObject()
-      );
-
-      setYears(Math.abs(interval.years));
-      setMonths(Math.abs(interval.months));
-      setDays(Math.abs(Math.ceil(interval.days)));
-    }
+    props.setYears(Math.abs(interval.years));
+    props.setMonths(Math.abs(interval.months));
+    props.setDays(Math.abs(Math.floor(interval.days)));
   };
 
   return (
     <ConfigProvider
       theme={{
+        token: {
+          colorText: 'var(--color-smokey-grey)',
+        },
         components: {
-          Typography: {
-            colorText: 'var(--color-smokey-grey)',
+          Form: {
+            fontSize: 11,
           },
           InputNumber: {
+            colorText: 'var(--color-off-black)',
             activeBorderColor: 'var(--color-purple)',
             hoverBorderColor: 'var(--color-purple)',
           },
@@ -77,32 +63,35 @@ const InputSection = ({
           },
         },
       }}>
-      <form onSubmit={handleSubmit} className={styles.form}>
+      <Form onFinish={onFinish} className={styles.form}>
         <Flex
           justify="flex-start"
           gap={30}
-          align="center"
+          align="start"
+          style={{ minHeight: 55 }}
           vertical={false}>
-          <label htmlFor="day">
-            <Typography.Paragraph className={styles.title}>
-              DAY
-            </Typography.Paragraph>
+          <Form.Item
+            label="DAY"
+            layout="vertical"
+            name="day"
+            className={styles.title}
+            rules={[{ required: true }]}>
             <InputNumber
-              name="day"
-              id="day"
               placeholder="DD"
               min={1}
               max={31}
               size="large"
               className={styles.inputStyle}
             />
-          </label>
-          <label htmlFor="month">
-            <Typography.Paragraph className={styles.title}>
-              MONTH
-            </Typography.Paragraph>
+          </Form.Item>
+
+          <Form.Item
+            label="MONTH"
+            layout="vertical"
+            name="month"
+            className={styles.title}
+            rules={[{ required: true }]}>
             <InputNumber
-              name="month"
               id="month"
               placeholder="MM"
               min={1}
@@ -110,23 +99,26 @@ const InputSection = ({
               size="large"
               className={styles.inputStyle}
             />
-          </label>
-          <label htmlFor="year">
-            <Typography.Paragraph className={styles.title}>
-              YEAR
-            </Typography.Paragraph>
+          </Form.Item>
+
+          <Form.Item
+            label="YEAR"
+            layout="vertical"
+            name="year"
+            className={styles.title}
+            rules={[{ required: true }]}>
             <InputNumber
-              name="year"
               id="year"
               placeholder="YYYY"
-              min={0}
-              max={Infinity}
+              min={1000}
+              max={DateTime.now().year}
               size="large"
               className={styles.inputStyle}
             />
-          </label>
+          </Form.Item>
         </Flex>
-        <Flex justify="flex-end" align="center" vertical={false}>
+
+        <Form.Item className={styles.buttonContainer}>
           <Button
             type="primary"
             htmlType="submit"
@@ -134,9 +126,9 @@ const InputSection = ({
             className={styles.buttonStyle}>
             <img src={icon} alt="icon" height={30} />
           </Button>
-        </Flex>
-        <span className={styles.line}></span>
-      </form>
+        </Form.Item>
+      </Form>
+      <span className={styles.line}></span>
     </ConfigProvider>
   );
 };
@@ -144,4 +136,4 @@ const InputSection = ({
 export default InputSection;
 
 // https://ant.design/components/input?theme=dark#api
-// https://ant.design/docs/react/customize-theme?theme=dark#nested-theme
+// https://ant.design/components/form?theme=dark
